@@ -6,22 +6,20 @@ public class StatePanelBehaviour : MonoBehaviour
 {
     // Start is called before the first frame update
     public State changeToState = State.Wood;
-
-
     private void OnTriggerEnter(Collider other)
     {
+        // If the trigger is caused by player then change the state of the player
         if (other.CompareTag("Player"))
         {
-            PlayerState playerState = other.GetComponent<PlayerState>();
-            PlayerController playerController = other.GetComponent<PlayerController>();
-            if (playerState.getState() != changeToState)
+            PlayerBehaviour playerBehaviour = other.GetComponent<PlayerBehaviour>();
+            if(playerBehaviour != null)
             {
-                playerController.SetCanMove(false);
-                playerController.rigidBody.velocity = Vector3.zero;
-                playerController.rigidBody.angularVelocity = Vector3.zero;
-                other.transform.position = new Vector3(transform.position.x, other.transform.position.y, transform.position.z);
-                playerState.setState(changeToState);
-                StartCoroutine(playerController.EnableMovement());
+                if(playerBehaviour.playerState != changeToState)
+                {
+                    playerBehaviour.StopMovement();
+                    other.transform.position = new Vector3(transform.position.x, other.transform.position.y, transform.position.z);
+                    StartCoroutine(playerBehaviour.InTransitionPlate(3f, changeToState));
+                }
             }
         }
     }
