@@ -4,20 +4,11 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    public float bulletLifeTime = 10f;
-    // Start is called before the first frame update
+    public float bulletSpeed = 70f;
+
     private void Awake()
     {
-        Destroy(gameObject, bulletLifeTime);
-    }
-
-    // Update is called once per frame
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            Destroy(collision.gameObject);
-            Destroy(gameObject);
-        }
+        Destroy(gameObject, 5f);
     }
 }
+

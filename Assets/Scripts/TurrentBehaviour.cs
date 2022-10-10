@@ -4,62 +4,82 @@ using UnityEngine;
 
 public class TurrentBehaviour : MonoBehaviour
 {
-    public Transform target;
-    public Transform bulletSpawnPoint;
-    public GameObject bulletPrefab;
+    [Header("Attributes")]
+    public float shootingRange=1.5f;
+    public float detectRange = 7f;
+    public float turnSpeed = 10f;
+    public float fireCountdown = 3f;
+
+    [Header("Essentials")]
     public SphereCollider sphereCollider;
-    public float triggerRadius = 5f;
-    public float bulletSpeed = 50f;
-    private float countdownBetweenFire = 0f;
-    [SerializeField] private float fireRate = 2f;
-     private bool isActive = false;
-    [SerializeField] private bool isDisabled = false;
+    public Transform mainBody;
+    public GameObject bulletPrefab;
+    public Transform firePoint;
+
+    private Transform target;
 
 
     private void Start()
     {
-        sphereCollider.radius = triggerRadius;
-    }
-    // Update is called once per frame
-    void Update()
-    {
-        if (isActive && !isDisabled)
-        {
-            transform.LookAt(target.position);
-            StartCoroutine(ShootCharging());
-        }
+        sphereCollider.radius = detectRange;
     }
 
-    void Shoot()
+    private void Update()
     {
-        if(countdownBetweenFire <= 0)
-        {
-            var bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletPrefab.transform.rotation);
-            bullet.GetComponent<Rigidbody>().velocity = bulletSpawnPoint.forward * bulletSpeed;
-            countdownBetweenFire = 1f / fireRate;
+        //If the target(player has not entered) then do nothing
+        if (target == null) {
+            return;        
         }
-        countdownBetweenFire -= Time.deltaTime;
+
+        //If the target player has entered range then rotate
+        Vector3 direction = target.position - transform.position;
+        Quaternion lookRotation = Quaternion.LookRotation(direction);
+        Vector3 rotation = Quaternion.Lerp(mainBody.rotation,lookRotation,Time.deltaTime * turnSpeed).eulerAngles;
+        mainBody.rotation = Quaternion.Euler(0f, rotation.y, 0f);
+
+        //If the player is in shooting range then shooting Bullet after every 3secs
+        float distanceFromTarget = Vector3.Distance(transform.position, target.position); 
+
+        if(distanceFromTarget <= shootingRange)
+        {
+            if (fireCountdown <= 0)
+            {
+                Shoot();
+                fireCountdown = 3f;
+            }
+            fireCountdown -= Time.deltaTime;
+        }
+        
+    }
+
+    private void Shoot()
+    {
+        GameObject bulletPb = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        float bulletSpeed = bulletPb.GetComponent<Bullet>().bulletSpeed;
+        bulletPb.GetComponent<Rigidbody>().velocity = firePoint.forward * bulletSpeed;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, shootingRange);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, detectRange);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.gameObject.CompareTag("Player"))
         {
-            isActive = true;
+            target = other.gameObject.transform;
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.gameObject.CompareTag("Player"))
         {
-            isActive = false;
+            target = null;
         }
-    }
-
-    private IEnumerator ShootCharging()
-    {
-        yield return new WaitForSeconds(3);
-        Shoot();
     }
 }
