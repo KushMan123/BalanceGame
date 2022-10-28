@@ -26,6 +26,7 @@ public class PlayerBehaviour : MonoBehaviour
     [Header("Push Attribute")]
     private bool canPush=true;
 
+
     // Start is called before the first frame update
     void Start()
     {
