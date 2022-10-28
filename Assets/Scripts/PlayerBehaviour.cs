@@ -26,6 +26,9 @@ public class PlayerBehaviour : MonoBehaviour
     [Header("Push Attribute")]
     private bool canPush=true;
 
+    [Header("GroundStateAttributes")]
+    [SerializeField] private bool isGrounded;
+
 
     // Start is called before the first frame update
     void Start()
@@ -38,7 +41,7 @@ public class PlayerBehaviour : MonoBehaviour
     private void Update()
     {
         //Clamp if the speed exceeds the maxSpeedLimit
-        if(rigidBody.velocity.magnitude > maxSpeedLimit)
+        if(rigidBody.velocity.magnitude > maxSpeedLimit && isGrounded)
         {
             rigidBody.velocity=Vector3.ClampMagnitude(rigidBody.velocity, maxSpeedLimit);
         }
@@ -137,5 +140,20 @@ public class PlayerBehaviour : MonoBehaviour
             WindArea = null;
             inWindArea = false;
         }
+    }
+
+    public bool GetGroundedStatus()
+    {
+        return isGrounded;
+    }
+
+    public void SetGroundedStatus(bool value)
+    {
+        isGrounded = value;
+    }
+
+    public void SetMass(float value)
+    {
+        rigidBody.mass = value;
     }
 }
