@@ -19,12 +19,10 @@ public class Deathzone : MonoBehaviour
         bool playerInGround = playerBehaviour.GetGroundedStatus();
         if (!playerInGround)
         {
-            Debug.Log("Static");
             transform.position = initialPosition;
         }
         else 
         {
-            Debug.Log("Moving");
             transform.position = Player.transform.position + offset;
         }
         initialPosition = transform.position;
