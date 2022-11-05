@@ -28,26 +28,35 @@ public class PlayerBehaviour : MonoBehaviour
 
     [Header("GroundStateAttributes")]
     [SerializeField] private bool isGrounded;
+    public float maxRayDistance;
+    public LayerMask layerMask;
+
+    [Header("Game Camera")]
+    public Camera gameCamera;
+    private CameraBehaviour cameraBehaviour;
 
 
     // Start is called before the first frame update
     void Start()
     {
         rigidBody = this.GetComponent<Rigidbody>();
+        cameraBehaviour = gameCamera.GetComponent<CameraBehaviour>();
         ChangeState(playerState);
     }
 
     // Update is called once per frame
     private void Update()
     {
+        RayCasting();
         //Clamp if the speed exceeds the maxSpeedLimit
-        if(rigidBody.velocity.magnitude > maxSpeedLimit && isGrounded)
+        if (rigidBody.velocity.magnitude > maxSpeedLimit && isGrounded)
         {
             rigidBody.velocity=Vector3.ClampMagnitude(rigidBody.velocity, maxSpeedLimit);
         }
     }
     private void FixedUpdate()
     {
+        
         //Player Movement Behaviour
         Movement();
         //In Wind Zone
@@ -59,9 +68,28 @@ public class PlayerBehaviour : MonoBehaviour
         //if the player can move then add force based on Input Direction
         if (canMove)
         {
-            horizontalAxis = Input.GetAxis("Horizontal");
-            verticalAxis = Input.GetAxis("Vertical");
-            rigidBody.AddForce(new Vector3(horizontalAxis * movementSpeed*Time.fixedDeltaTime, 0f , verticalAxis * movementSpeed*Time.fixedDeltaTime));
+            if (cameraBehaviour.GetCameraState() == CameraState.Front)
+            {
+                horizontalAxis = Input.GetAxis("Horizontal");
+                verticalAxis = Input.GetAxis("Vertical");
+            }
+            else if (cameraBehaviour.GetCameraState() == CameraState.Back)
+            {
+                horizontalAxis = -Input.GetAxis("Horizontal");
+                verticalAxis = -Input.GetAxis("Vertical");
+            }
+            else if (cameraBehaviour.GetCameraState() == CameraState.Right)
+            {
+                horizontalAxis = -Input.GetAxis("Vertical");
+                verticalAxis = Input.GetAxis("Horizontal");
+            }
+            else if (cameraBehaviour.GetCameraState() == CameraState.Left)
+            {
+                horizontalAxis = Input.GetAxis("Vertical");
+                verticalAxis = -Input.GetAxis("Horizontal");
+            }
+            Vector3 movementForce = new Vector3(horizontalAxis * movementSpeed * Time.fixedDeltaTime, 0f, verticalAxis * movementSpeed * Time.fixedDeltaTime);
+            rigidBody.AddForce(movementForce);
         }
     }
 
@@ -91,12 +119,12 @@ public class PlayerBehaviour : MonoBehaviour
                 break;
             case State.Wood:
                 this.GetComponent<Renderer>().material = woodMaterial;
-                rigidBody.mass = 5;
+                rigidBody.mass = 4;
                 canPush = true;
                 break;
             case State.Cement:
                 this.GetComponent<Renderer>().material = cementMaterial;
-                rigidBody.mass = 8;
+                rigidBody.mass = 8f;
                 canPush = true;
                 break;
         }
@@ -139,6 +167,21 @@ public class PlayerBehaviour : MonoBehaviour
         {
             WindArea = null;
             inWindArea = false;
+        }
+    }
+
+    private void RayCasting()
+    {
+        RaycastHit hit;
+        if(Physics.Raycast(transform.position, Vector3.down, out hit, maxRayDistance,layerMask))
+        {
+            Debug.DrawRay(transform.position, Vector3.down*maxRayDistance, Color.green);
+            isGrounded = true;
+        }
+        else
+        {
+            Debug.DrawRay(transform.position, Vector3.down*maxRayDistance, Color.red);
+            isGrounded = false;
         }
     }
 
